@@ -1,0 +1,125 @@
+{#
+/**
+ * @file
+ * Default theme implementation to display a Twitter feed block.
+ *
+ * Available variables:
+ * - tweets: An array of tweet data.
+ * - handle: The Twitter handle being displayed.
+ * - show_profile_image: Boolean indicating whether to show profile images.
+ * - default_theme: The default theme ('light', 'dark', or 'auto').
+ * - allow_theme_toggle: Whether to show the theme toggle button.
+ * - attributes: HTML attributes for the container element.
+ *
+ * @see template_preprocess_twitter_feed_block()
+ *
+ * @ingroup themeable
+ */
+#}
+<div {{ attributes.addClass('twitter-feed') }} data-theme="{{ default_theme|default('light') }}">
+  <div class="twitter-feed__header">
+    <h2 class="twitter-feed__title">
+      <span class="twitter-feed__icon">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24">
+          <path d="M23.953 4.57a10 10 0 01-2.825.775 4.958 4.958 0 002.163-2.723c-.951.555-2.005.959-3.127 1.184a4.92 4.92 0 00-8.384 4.482C7.69 8.095 4.067 6.13 1.64 3.162a4.822 4.822 0 00-.666 2.475c0 1.71.87 3.213 2.188 4.096a4.904 4.904 0 01-2.228-.616v.06a4.923 4.923 0 003.946 4.827 4.996 4.996 0 01-2.212.085 4.936 4.936 0 004.604 3.417 9.867 9.867 0 01-6.102 2.105c-.39 0-.779-.023-1.17-.067a13.995 13.995 0 007.557 2.209c9.053 0 13.998-7.496 13.998-13.985 0-.21 0-.42-.015-.63A9.935 9.935 0 0024 4.59v-.023z" fill="currentColor" />
+        </svg>
+      </span>
+      {{ 'Tweets by @'|t }}{{ handle }}
+    </h2>
+    <div class="twitter-feed__controls">
+      {% if allow_theme_toggle %}
+        <button type="button" class="twitter-feed__theme-toggle" aria-label="{{ 'Toggle theme'|t }}" title="{{ 'Toggle theme'|t }}">
+          {# Light mode icon - Modern sun #}
+          <span class="icon-light">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <circle cx="12" cy="12" r="4" />
+              <path d="M12 2v2" />
+              <path d="M12 20v2" />
+              <path d="M4.93 4.93l1.41 1.41" />
+              <path d="M17.66 17.66l1.41 1.41" />
+              <path d="M2 12h2" />
+              <path d="M20 12h2" />
+              <path d="M6.34 17.66l-1.41 1.41" />
+              <path d="M19.07 4.93l-1.41 1.41" />
+            </svg>
+          </span>
+
+          {# Dark mode icon - Minimal moon #}
+          <span class="icon-dark">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9z" />
+            </svg>
+          </span>
+
+          {# Auto mode icon - System preference #}
+          <span class="icon-auto">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M20 7h-9" />
+              <path d="M14 17H5" />
+              <circle cx="17" cy="17" r="3" />
+              <circle cx="7" cy="7" r="3" />
+            </svg>
+          </span>
+        </button>
+      {% endif %}
+      <a href="https://twitter.com/{{ handle }}" class="twitter-feed__view-all" target="_blank" rel="noopener noreferrer">
+        {{ 'View on Twitter'|t }}
+        <span class="visually-hidden">{{ 'Opens in a new window'|t }}</span>
+      </a>
+    </div>
+  </div>
+
+  {% if tweets is empty %}
+    <div class="twitter-feed__empty">
+      <p>{{ 'No tweets found. Please check the Twitter handle or API configuration.'|t }}</p>
+    </div>
+  {% else %}
+    <div class="twitter-feed__content">
+      {% for tweet in tweets %}
+        <div class="twitter-feed__tweet">
+          <div class="twitter-feed__tweet-header">
+            {% if show_profile_image and tweet.author_profile_image %}
+              <div class="twitter-feed__profile-image">
+                <img src="{{ tweet.author_profile_image }}" alt="{{ tweet.author_name }} profile image" />
+              </div>
+            {% endif %}
+            <div class="twitter-feed__author-info">
+              <span class="twitter-feed__author-name">{{ tweet.author_name }}</span>
+              <span class="twitter-feed__author-username"><a href="https://twitter.com/{{ tweet.author_username }}" target="_blank" rel="noopener noreferrer">@{{ tweet.author_username }}</a></span>
+            </div>
+          </div>
+
+          <div class="twitter-feed__tweet-body">
+            <p>{{ tweet.text|raw }}</p>
+          </div>
+
+          <div class="twitter-feed__tweet-footer">
+            <div class="twitter-feed__timestamp">
+              <a href="{{ tweet.url }}" target="_blank" rel="noopener noreferrer">
+                {{ tweet.formatted_time }}
+                <span class="visually-hidden">{{ 'Opens in a new window'|t }}</span>
+              </a>
+            </div>
+            <div class="twitter-feed__metrics">
+              <span class="twitter-feed__likes" aria-label="{{ tweet.likes_count }} {{ 'likes'|t }}">
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path>
+                </svg>
+                {{ tweet.likes_count }}
+              </span>
+              <span class="twitter-feed__retweets" aria-label="{{ tweet.retweets_count }} {{ 'retweets'|t }}">
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M17 1l4 4-4 4"></path>
+                  <path d="M3 11V9a4 4 0 0 1 4-4h14"></path>
+                  <path d="M7 23l-4-4 4-4"></path>
+                  <path d="M21 13v2a4 4 0 0 1-4 4H3"></path>
+                </svg>
+                {{ tweet.retweets_count }}
+              </span>
+            </div>
+          </div>
+        </div>
+      {% endfor %}
+    </div>
+  {% endif %}
+</div>

@@ -1,0 +1,8 @@
+services:
+  twitter_feed.twitter_service:
+    class: Drupal\twitter_feed\TwitterService
+    arguments:
+      - "@http_client_factory"
+      - "@config.factory"
+      - "@cache.default"
+      - "@logger.factory"

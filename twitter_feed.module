@@ -1,0 +1,127 @@
+<?php
+
+/**
+ * @file
+ * Contains twitter_feed.module.
+ */
+
+use Drupal\Core\Routing\RouteMatchInterface;
+use Drupal\Core\Datetime\DrupalDateTime;
+
+/**
+ * Implements hook_help().
+ */
+function twitter_feed_help($route_name, RouteMatchInterface $route_match)
+{
+  switch ($route_name) {
+    case 'help.page.twitter_feed':
+      $output = '';
+      $output .= '<h3>' . t('About') . '</h3>';
+      $output .= '<p>' . t('The Twitter Feed module provides a block to display tweets from a Twitter account.') . '</p>';
+      return $output;
+  }
+}
+
+/**
+ * Implements hook_theme().
+ */
+function twitter_feed_theme()
+{
+  return [
+    'twitter_feed_block' => [
+      'variables' => [
+        'tweets' => [],
+        'handle' => '',
+        'show_profile_image' => TRUE,
+        'default_theme' => 'light',
+        'allow_theme_toggle' => TRUE,
+        'attributes' => [],
+      ],
+      'template' => 'twitter-feed-block',
+    ],
+  ];
+}
+
+/**
+ * Implements hook_preprocess_HOOK() for twitter_feed_block templates.
+ */
+function twitter_feed_preprocess_twitter_feed_block(&$variables)
+{
+  if (!isset($variables['allow_theme_toggle']) && isset($variables['elements']['#allow_theme_toggle'])) {
+    $variables['allow_theme_toggle'] = $variables['elements']['#allow_theme_toggle'];
+  }
+
+  foreach ($variables['tweets'] as &$tweet) {
+    // Convert created_at to timestamp
+    $datetime = new DrupalDateTime($tweet['created_at']);
+    $timestamp = $datetime->getTimestamp();
+    $current_time = \Drupal::time()->getCurrentTime();
+    $diff = $current_time - $timestamp;
+
+    // Format time as relative or fallback to date
+    if ($diff < 60) {
+      $tweet['formatted_time'] = t('@seconds seconds ago', ['@seconds' => $diff]);
+    } elseif ($diff < 3600) {
+      $tweet['formatted_time'] = t('@minutes minutes ago', ['@minutes' => floor($diff / 60)]);
+    } elseif ($diff < 86400) {
+      $tweet['formatted_time'] = t('@hours hours ago', ['@hours' => floor($diff / 3600)]);
+    } else {
+      $tweet['formatted_time'] = $datetime->format('M j, Y - H:i');
+    }
+
+    // Generate tweet URL
+    $tweet['url'] = 'https://twitter.com/' . $tweet['author']['username'] . '/status/' . $tweet['id'];
+
+    // Ensure author data is available
+    $tweet['author_name'] = $tweet['author']['name'] ?? '';
+    $tweet['author_username'] = $tweet['author']['username'] ?? '';
+    $tweet['author_profile_image'] = $tweet['author']['profile_image_url'] ?? '';
+    $tweet['likes_count'] = $tweet['public_metrics']['like_count'] ?? 0;
+    $tweet['retweets_count'] = $tweet['public_metrics']['retweet_count'] ?? 0;
+
+    // Log the data
+    \Drupal::logger('twitter_feed')->debug('Author: @username (@name), Profile Image: @img', [
+      '@username' => $tweet['author_username'],
+      '@name' => $tweet['author_name'],
+      '@img' => $tweet['author_profile_image'],
+    ]);
+
+    // Format tweet text (URLs, mentions, hashtags)
+    $text = $tweet['text'];
+
+    // Linkify URLs
+    $text = preg_replace_callback('/https?:\/\/\S+/', function ($matches) {
+      $url = $matches[0];
+      return '<a href="' . $url . '" target="_blank" rel="noopener noreferrer">' . $url . '</a>';
+    }, $text);
+
+    // Linkify mentions (@username)
+    $text = preg_replace('/@(\w+)/', '<a href="https://twitter.com/$1" target="_blank">@$1</a>', $text);
+
+    // Linkify hashtags (#hashtag)
+    $text = preg_replace('/#(\w+)/', '<a href="https://twitter.com/hashtag/$1" target="_blank">#$1</a>', $text);
+
+    $tweet['text'] = $text;
+  }
+
+  // Add aria label for accessibility
+  $variables['attributes']['aria-label'] = t('Twitter feed from @handle', ['@handle' => $variables['handle']]);
+}
+
+/**
+ * Implements template_preprocess_HOOK() for twitter_feed_block templates.
+ */
+function template_preprocess_twitter_feed_block(&$variables)
+{
+  // Ensure boolean value for theme toggle
+  $variables['allow_theme_toggle'] = !empty($variables['allow_theme_toggle']);
+
+  // Set default theme if not set
+  if (!isset($variables['default_theme'])) {
+    if (isset($variables['elements']['#default_theme'])) {
+      $variables['default_theme'] = $variables['elements']['#default_theme'];
+    } else {
+      $variables['default_theme'] = 'light'; // Fallback default value
+    }
+  }
+}

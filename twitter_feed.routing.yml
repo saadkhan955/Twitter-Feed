@@ -1,0 +1,7 @@
+twitter_feed.settings:
+  path: "/admin/config/services/twitter-feed"
+  defaults:
+    _form: '\Drupal\twitter_feed\Form\TwitterFeedSettingsForm'
+    _title: "Twitter Feed Settings"
+  requirements:
+    _permission: "administer site configuration"

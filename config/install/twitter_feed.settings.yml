@@ -1,0 +1,5 @@
+# This is a dummy token, replace with your own.
+bearer_token: "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA"
+default_handle: "drupal"
+tweet_count: 5
+cache_lifetime: 3600

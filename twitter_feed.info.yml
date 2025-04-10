@@ -1,0 +1,7 @@
+name: Twitter Feed
+type: module
+description: "Provides a custom block to display Twitter feed."
+core_version_requirement: ^9 || ^10 || ^11
+package: Custom
+dependencies:
+  - drupal:block
